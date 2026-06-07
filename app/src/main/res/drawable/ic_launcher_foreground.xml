@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Document Backdrop with Rounded Corners -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,22 h48 c4.4,0 8,3.6 8,8 v48 c0,4.4 -3.6,8 -8,8 h-48 c-4.4,0 -8,-3.6 -8,-8 v-48 c0,-4.4 3.6,-8 8,-8 z" />
+    
+    <!-- M Letter in Deep Blue -->
+    <path
+        android:fillColor="#0D47A1"
+        android:pathData="M34,36h6v12l6,-8l6,8v-12h6v24h-6l-6,-9l-6,9h-6z" />
+    
+    <!-- Down Arrow in Teal Accent -->
+    <path
+        android:fillColor="#00B0FF"
+        android:pathData="M66,36h6v14h4l-7,8l-7,-8h4z" />
+</vector>

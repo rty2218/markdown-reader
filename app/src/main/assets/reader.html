@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Markdown Reader</title>
+
+    <!-- All assets bundled locally for fully offline rendering -->
+    <link rel="stylesheet" href="vendor/github-markdown.css">
+    <link rel="stylesheet" href="vendor/katex/katex.min.css">
+    <link rel="stylesheet" href="vendor/prism/prism-tomorrow.min.css">
+
+    <script src="vendor/marked.umd.js"></script>
+    <script src="vendor/katex/katex.min.js"></script>
+    <script src="vendor/katex/auto-render.min.js"></script>
+    <script src="vendor/mermaid.min.js"></script>
+    <script>window.Prism = window.Prism || {}; window.Prism.manual = true;</script>
+    <script src="vendor/prism/prism.js"></script>
+    <script src="vendor/prism/prism-clike.min.js"></script>
+    <script src="vendor/prism/prism-c.min.js"></script>
+    <script src="vendor/prism/prism-cpp.min.js"></script>
+    <script src="vendor/prism/prism-csharp.min.js"></script>
+    <script src="vendor/prism/prism-java.min.js"></script>
+    <script src="vendor/prism/prism-javascript.min.js"></script>
+    <script src="vendor/prism/prism-typescript.min.js"></script>
+    <script src="vendor/prism/prism-kotlin.min.js"></script>
+    <script src="vendor/prism/prism-python.min.js"></script>
+    <script src="vendor/prism/prism-go.min.js"></script>
+    <script src="vendor/prism/prism-rust.min.js"></script>
+    <script src="vendor/prism/prism-bash.min.js"></script>
+    <script src="vendor/prism/prism-json.min.js"></script>
+    <script src="vendor/prism/prism-yaml.min.js"></script>
+    <script src="vendor/prism/prism-sql.min.js"></script>
+    <script src="vendor/prism/prism-markdown.min.js"></script>
+
+    <style>
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 16px 20px 48px;
+            background-color: #ffffff;
+            color: #24292e;
+        }
+        .markdown-body { box-sizing: border-box; min-width: 100%; }
+
+        /* Dark theme follows device setting */
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #0d1117; color: #c9d1d9; }
+            .markdown-body { color-scheme: dark; }
+            ::-webkit-scrollbar { width: 8px; height: 8px; }
+            ::-webkit-scrollbar-track { background: #161b22; }
+            ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+        }
+
+        .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+        .katex { font-size: 1.05em; }
+        .math-error { color: #d73a49; font-family: monospace; border-bottom: 1px dashed #d73a49; }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            padding: 12px;
+            background-color: rgba(127,127,127,0.04);
+            border-radius: 8px;
+            border: 1px solid rgba(127,127,127,0.15);
+            overflow-x: auto;
+        }
+        .mermaid svg { max-width: 100%; height: auto; }
+
+        /* Make Prism code blocks fit the GitHub markdown look */
+        pre[class*="language-"] { border-radius: 8px; margin: 14px 0; }
+
+        @media print {
+            body { max-width: none; padding: 0; }
+            .mermaid { break-inside: avoid; border: none; background: none; }
+            pre, blockquote, table, img { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <article id="content" class="markdown-body">
+        <div style="text-align:center; padding:40px; color:#888;"><p>正在渲染…</p></div>
+    </article>
+
+    <script>
+    (function () {
+        var ready = false;
+        var pending = null;
+
+        var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (window.mermaid) {
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: isDark ? 'dark' : 'default',
+                securityLevel: 'loose',
+                flowchart: { useMaxWidth: true },
+                fontFamily: 'inherit'
+            });
+        }
+
+        // Register math as real marked tokenizer extensions so emphasis / underscores
+        // inside formulas are never mangled, and code spans stay literal.
+        function renderMath(tex, display) {
+            try {
+                return katex.renderToString(tex, {
+                    displayMode: display,
+                    throwOnError: false,
+                    strict: false
+                });
+            } catch (e) {
+                return '<span class="math-error">' + escapeHtml(tex) + '</span>';
+            }
+        }
+
+        if (window.marked) {
+            marked.use({
+                gfm: true,
+                breaks: false,
+                extensions: [
+                    {
+                        name: 'blockMath',
+                        level: 'block',
+                        start: function (src) { var i = src.indexOf('$$'); return i < 0 ? undefined : i; },
+                        tokenizer: function (src) {
+                            var m = /^\$\$([\s\S]+?)\$\$/.exec(src);
+                            if (m) return { type: 'blockMath', raw: m[0], text: m[1].trim() };
+                        },
+                        renderer: function (t) {
+                            return '<div class="math-block">' + renderMath(t.text, true) + '</div>';
+                        }
+                    },
+                    {
+                        name: 'inlineMath',
+                        level: 'inline',
+                        start: function (src) { var i = src.indexOf('$'); return i < 0 ? undefined : i; },
+                        tokenizer: function (src) {
+                            var m = /^\$((?:\\\$|[^\$\n])+?)\$/.exec(src);
+                            if (!m) return;
+                            var inner = m[1];
+                            // Skip currency-like "$5 and $10": math must hug the delimiters.
+                            if (/^\s|\s$/.test(inner)) return;
+                            return { type: 'inlineMath', raw: m[0], text: inner };
+                        },
+                        renderer: function (t) {
+                            return '<span class="math-inline">' + renderMath(t.text, false) + '</span>';
+                        }
+                    }
+                ]
+            });
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function doRender(md) {
+            var content = document.getElementById('content');
+            if (md === null || md === undefined || md === '') {
+                content.innerHTML = '<div style="text-align:center; padding:40px; color:#888;"><p>空文档</p></div>';
+                return;
+            }
+            try {
+                var html = window.marked ? marked.parse(md) : escapeHtml(md);
+                content.innerHTML = html;
+
+                // 1. Turn ```mermaid code blocks into mermaid containers (before Prism touches them)
+                var mermaidNodes = [];
+                content.querySelectorAll('pre > code.language-mermaid').forEach(function (code) {
+                    var div = document.createElement('div');
+                    div.className = 'mermaid';
+                    div.textContent = code.textContent;
+                    code.parentElement.replaceWith(div);
+                    mermaidNodes.push(div);
+                });
+
+                // 2. Syntax-highlight the remaining code blocks
+                if (window.Prism) {
+                    try { Prism.highlightAllUnder(content); } catch (e) {}
+                }
+
+                // 3. Render any math the tokenizer could not reach (e.g. \( \) \[ \]),
+                //    auto-render skips <pre>/<code> so code stays literal.
+                if (window.renderMathInElement) {
+                    try {
+                        renderMathInElement(content, {
+                            delimiters: [
+                                { left: '$$', right: '$$', display: true },
+                                { left: '\\[', right: '\\]', display: true },
+                                { left: '\\(', right: '\\)', display: false }
+                            ],
+                            throwOnError: false,
+                            strict: false
+                        });
+                    } catch (e) {}
+                }
+
+                // 4. Render mermaid diagrams (async)
+                if (window.mermaid && mermaidNodes.length) {
+                    try { mermaid.run({ nodes: mermaidNodes }); } catch (e) {}
+                }
+            } catch (error) {
+                content.innerHTML = '<div style="background:#fee;border:1px solid #fcc;padding:16px;border-radius:6px;color:#a00;">'
+                    + '<h3>渲染错误</h3><pre>' + escapeHtml(error.message) + '</pre></div>';
+            }
+        }
+
+        // Public entry point called from Android via evaluateJavascript.
+        window.updateMarkdownContent = function (text) {
+            if (ready) { doRender(text); } else { pending = text; }
+        };
+
+        window.addEventListener('DOMContentLoaded', function () {
+            ready = true;
+            if (pending !== null) { doRender(pending); pending = null; }
+        });
+    })();
+    </script>
+</body>
+</html>
