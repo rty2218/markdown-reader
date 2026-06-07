@@ -1,6 +1,0 @@
-{
-  "name": "Markdown Reader",
-  "description": "A full-featured Markdown reader and editor supporting editing, Math formulas (LaTeX), Mermaid diagrams, and exporting to PDF/DOCX.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

@@ -1,18 +1,40 @@
-*.iml
-.gradle
-.kotlin
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+# macOS
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+
+# Gradle / Kotlin build state
+.gradle/
+.kotlin/
+build/
+**/build/
+
+# Android generated/native build output
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local machine config and secrets
 local.properties
 .env
+.env.*
+
+# Signing material
+*.jks
+*.keystore
 debug.keystore
+debug.keystore.base64
+
+# Packaged build artifacts
+*.apk
+*.apks
+*.aab
+*.aar
+.build-outputs/
+
+# AI Studio / local assistant metadata
+metadata.json
+assets/.aistudio/
+.claude/
