@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            val activeFilePath by viewModel.activeFilePath.collectAsStateWithLifecycle()
+            val isEditing by viewModel.isEditing.collectAsStateWithLifecycle()
 
             MyApplicationTheme {
                 Scaffold(
@@ -90,11 +90,11 @@ class MainActivity : ComponentActivity() {
                     contentWindowInsets = WindowInsets(0.dp)
                 ) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
-                        if (activeFilePath == null) {
+                        if (!isEditing) {
                             HomeScreen(viewModel = viewModel)
                         } else {
                             WorkspaceScreen(viewModel = viewModel, onBack = {
-                                viewModel.createNewFile(this@MainActivity) // return to home
+                                viewModel.returnToHome() // return to home
                             })
                         }
                     }
