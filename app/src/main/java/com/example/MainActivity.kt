@@ -24,6 +24,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -82,7 +83,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            val activeFilePath by viewModel.activeFilePath.collectAsStateWithLifecycle()
+            val inEditor by viewModel.inEditor.collectAsStateWithLifecycle()
 
             MyApplicationTheme {
                 Scaffold(
@@ -90,11 +91,11 @@ class MainActivity : ComponentActivity() {
                     contentWindowInsets = WindowInsets(0.dp)
                 ) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
-                        if (activeFilePath == null) {
+                        if (!inEditor) {
                             HomeScreen(viewModel = viewModel)
                         } else {
                             WorkspaceScreen(viewModel = viewModel, onBack = {
-                                viewModel.createNewFile(this@MainActivity) // return to home
+                                viewModel.goHome() // return to home
                             })
                         }
                     }
@@ -661,6 +662,8 @@ fun RecentFileItem(file: RecentFile, onClick: () -> Unit, onDelete: () -> Unit) 
 @Composable
 fun WorkspaceScreen(viewModel: MarkdownViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
+    // System back returns to Home instead of exiting the app.
+    BackHandler { onBack() }
     val content by viewModel.markdownContent.collectAsStateWithLifecycle()
     val activeFileName by viewModel.activeFileName.collectAsStateWithLifecycle()
     val isModified by viewModel.isModified.collectAsStateWithLifecycle()

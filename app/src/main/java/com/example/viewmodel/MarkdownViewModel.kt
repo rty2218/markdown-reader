@@ -39,6 +39,12 @@ class MarkdownViewModel(private val database: MarkdownDatabase) : ViewModel() {
     private val _isModified = MutableStateFlow(false)
     val isModified: StateFlow<Boolean> = _isModified.asStateFlow()
 
+    // Whether the editor/workspace is open. Kept separate from activeFilePath
+    // because a brand-new, unsaved document legitimately has a null path but
+    // must still open the editor (otherwise "新建文档" appears to do nothing).
+    private val _inEditor = MutableStateFlow(false)
+    val inEditor: StateFlow<Boolean> = _inEditor.asStateFlow()
+
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
@@ -84,6 +90,14 @@ class MarkdownViewModel(private val database: MarkdownDatabase) : ViewModel() {
         _activeFileName.value = "未命名.md"
         _markdownContent.value = "# 未命名\n\n在此输入您的 Markdown 内容..."
         _isModified.value = false
+        _inEditor.value = true   // open the editor for the new document
+    }
+
+    // Leave the editor and return to the home screen.
+    fun goHome() {
+        _inEditor.value = false
+        _activeFilePath.value = null
+        _isModified.value = false
     }
 
     // Load file content from raw Uri
@@ -105,6 +119,7 @@ class MarkdownViewModel(private val database: MarkdownDatabase) : ViewModel() {
                 _activeFileName.value = name
                 _markdownContent.value = content
                 _isModified.value = false
+                _inEditor.value = true   // opened a file -> show the editor
 
                 // Add to recent files database
                 withContext(Dispatchers.IO) {
